@@ -1,0 +1,6 @@
+#define NO_ACTION_MACRO
+#define NO_ACTION_FUNCTION
+
+#ifdef AUDIO_ENABLE
+    #define STARTUP_SONG SONG(PREONIC_SOUND)
+#endif
