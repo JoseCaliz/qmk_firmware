@@ -17,17 +17,18 @@
 #include QMK_KEYBOARD_H
 #include "config.h"
 
-#ifdef AUDIO_ENABLE
-// Define my own sounds
-#define MY_OWN_SOUND HD_NOTE(_C8), HD_NOTE(_D3), HD_NOTE(_C6)
-float layer0_song[][2] = SONG(MY_OWN_SOUND);
-float layer1_song[][2] = SONG(COLEMAK_SOUND);
-#endif
-
-
-bool WINDOWS = false;
-bool MAC = true;
+bool WINDOWS = true;
+bool MAC = false;
 bool LINUX = false;
+bool unregister_alt = false;
+
+enum custom_keycodes {
+    KC_ACCENT = SAFE_RANGE,
+    KC_TEST,
+    KC_SWITCH,
+    KC_CMD,
+    KC_CTRL
+};
 
 enum layer_names {
   _DVORAK,
@@ -37,18 +38,13 @@ enum layer_names {
   _SYSTEM
 };
 
-enum custom_keycodes {
-    KC_ACCENT = SAFE_RANGE,
-    KC_TEST,
-    KC_SWITCH,
-};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DVORAK] = LAYOUT_ortho_4x12(
         KC_TAB,  KC_QUOT, KC_COMM, KC_DOT,  KC_P,  KC_Y,   KC_F,   KC_G,  KC_C,    KC_R,    KC_L,  KC_BSPC,
         KC_ESC,  KC_A,    KC_O,    KC_E,    KC_U,  KC_I,   KC_D,   KC_H,  KC_T,    KC_N,    KC_S,  KC_ENT,
         KC_LSFT, KC_SCLN, KC_Q,    KC_J,    KC_K,  KC_X,   KC_B,   KC_M,  KC_W,    KC_V,    KC_Z,  KC_RSFT,
-        KC_LGUI, KC_GRV,  KC_LALT, KC_LCTL, MO(2), KC_SPC, KC_SPC, MO(3), KC_LEFT, KC_DOWN, KC_UP, KC_RGHT
+        KC_CTRL, KC_GRV,  KC_LALT, KC_CMD, MO(2), KC_SPC, KC_SPC, MO(3), KC_LEFT, KC_DOWN, KC_UP, KC_RGHT
     ),
     [_QWERTY] = LAYOUT_ortho_4x12(
         KC_TAB,   KC_Q,    KC_W,     KC_E,     KC_R,   _______,  KC_Y,    KC_U,    KC_I,     KC_O,     KC_P,    KC_BSPC,
@@ -70,70 +66,117 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SYSTEM] = LAYOUT_ortho_4x12(
         QK_BOOT, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, KC_SWITCH, _______,    KC_F1, KC_F2, KC_F3, KC_F10, DB_TOGG,
-        _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, _______,  KC_TEST,  KC_F4, KC_F5, KC_F6, KC_F11, CG_RNRM,
+        _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, _______,  _______,  KC_F4, KC_F5, KC_F6, KC_F11, CG_RNRM,
         _______, RGB_RMOD, RGB_SPD, RGB_SPI, _______, _______, _______, KC_F7, KC_F8, KC_F9, KC_F12, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, KC_MRWD, _______, _______, KC_MFFD
     )
 }; 
   
-layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
-    case _DVORAK:
-        rgblight_sethsv (0x00,  0x00, 0xFF);
-        break;
-    case _LRAISE:
-        rgblight_sethsv (0xFF,  0x00, 0x00);
-        break;
-    case _RRAISE:
-        rgblight_sethsv (0x00,  0xFF, 0x00);
-        break;
-    case _SYSTEM:
-        rgblight_sethsv (0x7A,  0x00, 0xFF);
-        break;
-    default: //  for any other layers, or the default layer
-        rgblight_sethsv (0x00,  0xFF, 0xFF);
-        break;
-    }
-  return state;
-}
+// layer_state_t layer_state_set_user(layer_state_t state) {
+//     switch (get_highest_layer(state)) {
+//     case _DVORAK:
+//         rgblight_sethsv (0x00,  0x00, 0xFF);
+//         break;
+//     case _LEFT_RAISE:
+//         rgblight_sethsv (0xFF,  0x00, 0x00);
+//         break;
+//     case _RIGHT_RAISE:
+//         rgblight_sethsv (0x00,  0xFF, 0x00);
+//         break;
+//     case _SYSTEM:
+//         rgblight_sethsv (0x7A,  0x00, 0xFF);
+//         break;
+//     default: //  for any other layers, or the default layer
+//         rgblight_sethsv (0x00,  0xFF, 0xFF);
+//         break;
+//     }
+//   return state;
+// }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
+    case KC_TAB:
+        if (WINDOWS){
+            if (record->event.pressed && (get_mods() & MOD_MASK_CTRL) != 0) {
+                unregister_code(KC_LCTL);
+                register_code(KC_LALT);
+                tap_code16(KC_TAB);
+                unregister_alt = true;
+            }
+            else if (record->event.pressed) {
+                tap_code16(KC_TAB);
+            }
+        }
+        return false;
     case KC_ACCENT:
       if (record->event.pressed) {
-        if (WINDOWS){
-            tap_code16(RALT(KC_QUOT));
-        }
-        else if (MAC) {
-            tap_code16(RALT(KC_E));
-        }
-        else {
-            tap_code16(RALT(KC_U));
-        }
+        if (WINDOWS){ tap_code16(RALT(KC_QUOT)); }
+        else if (MAC) { tap_code16(RALT(KC_E)); }
+        else if (LINUX) { tap_code16(RALT(KC_U)); }
       } else {
         // Do something else when release
       }
       return false; // Skip all further processing of this key
+    
+    // WINDOW -> MAC -> LINUX
     case KC_SWITCH:
         if (record -> event.pressed) {
             if (WINDOWS) {
                 WINDOWS = false; LINUX = false; MAC = true;
+                // rgblight_sethsv (0x00,  0x00, 0xFF);
             }
             else if (MAC) {
                 WINDOWS = false; LINUX = true; MAC = false;
+                // rgblight_sethsv (0x00,  0x00, 0xFF);
             }
             else{
                 WINDOWS = true; LINUX = false; MAC = false;
+                // rgblight_sethsv (0x00,  0x00, 0xFF);
             }
         }
         return false;
-
-    case KC_TEST:
-      // Play a tone when enter is pressed
-      if (record->event.pressed) {
-        SEND_STRING("Hello, world!\n");
-      }
-      return true; // Let QMK send the enter press/release events
+    case KC_CMD:
+        if (record -> event.pressed) {
+            if (WINDOWS || LINUX) {
+                register_code(KC_LCTL);
+            }
+            else {
+                register_code(KC_LGUI);
+            }
+        }
+        else {
+            if (WINDOWS || LINUX) {
+                if (unregister_alt) {
+                    unregister_code(KC_LALT);
+                    unregister_alt = false;
+                }
+                else {
+                    unregister_code(KC_LCTL);
+                }
+            }
+            else {
+                unregister_code(KC_LGUI);
+            }
+        }
+        return false;
+    case KC_CTRL:
+        if (record -> event.pressed) {
+            if (WINDOWS || LINUX) {
+                register_code(KC_LGUI);
+            }
+            else {
+                register_code(KC_LCTL);
+            }
+        }
+        else {
+            if (WINDOWS || LINUX) {
+                unregister_code(KC_LGUI);
+            }
+            else {
+                unregister_code(KC_LCTL);
+            }
+        }
+        return false;
     default:
       return true; // Process all other keycodes normally
   }
