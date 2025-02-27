@@ -18,6 +18,7 @@
 #include "config.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 bool WINDOWS = true;
 bool MAC = false;
@@ -29,6 +30,10 @@ bool MAC = true;
 bool WINDOWS = true;
 bool MAC = false;
 >>>>>>> 23ef7c29ca (merging with upstream)
+=======
+bool WINDOWS = true;
+bool MAC = false;
+>>>>>>> b06656350e (Stable version with windows and mac. Missing testing Mac)
 bool LINUX = false;
 bool unregister_alt = false;
 
