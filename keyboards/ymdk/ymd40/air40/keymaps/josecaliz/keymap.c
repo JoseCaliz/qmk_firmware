@@ -17,6 +17,7 @@
 #include QMK_KEYBOARD_H
 #include "config.h"
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 bool WINDOWS = true;
 bool MAC = false;
@@ -24,6 +25,10 @@ bool MAC = false;
 bool WINDOWS = false;
 bool MAC = true;
 >>>>>>> Stashed changes
+=======
+bool WINDOWS = true;
+bool MAC = false;
+>>>>>>> 23ef7c29ca (merging with upstream)
 bool LINUX = false;
 bool unregister_alt = false;
 
